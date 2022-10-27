@@ -83,5 +83,11 @@
   <ItemGroup>
     <None Include="Resources\putin-compressed.jpg" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\photo-1.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\photo-2.jpg" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

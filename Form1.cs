@@ -13,7 +13,7 @@ namespace CG_4
         PictureBox diagPicture = new PictureBox();
         public Form1()
         {
-            Bitmap im = Properties.Resources.picture_hand_compressed;
+            Bitmap im = Properties.Resources.photo_2;
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -127,9 +127,25 @@ namespace CG_4
             }
             diagPicture.Image = bm;
         }
-        private void imageThresholding(object sender, MouseEventArgs args)
+
+        public byte[] DiagramCreation(int n, byte max, byte min)
         {
-            
+            byte[] diag = new byte[(max - min + 1)];
+            int dx = (max - min) / n;
+            int dy = 255 / dx;
+            int cx = 0;
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = cx; j < ((i + 1) * dx); j++)
+                {
+                    diag[j] = (byte)((j-cx) * dy);
+                }
+                cx += dx;
+            }
+            return diag;
+        }
+        private void imageThresholding(object sender, MouseEventArgs args)
+        { 
             if ((sender as PictureBox).Image != null)
             {
                 Bitmap bm = (Bitmap)((sender as PictureBox).Image);
@@ -144,7 +160,7 @@ namespace CG_4
                         else if (min > c) min = c;
                     }
                 }
-                byte[] diag = DiagramCreation(3, (byte)(max), min);
+                byte[] diag = DiagramCreation(3, max, min);
 
                 Bitmap nbm = new Bitmap(bm.Width, bm.Height);
                 for (int i = 0; i < bm.Width; i++)
@@ -159,22 +175,6 @@ namespace CG_4
                 }
                 thresPicture.Image = nbm;
             }
-        }
-
-         public byte[] DiagramCreation(int n, byte max, byte min)
-         {
-            byte[] diag = new byte[(max-min+1)];
-            int dx = (max-min) / n;
-            int cx = 0;
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = cx; j < (i + 1) * dx; j++)
-                {
-                    diag[j] = (byte)(j * n);
-                }
-                cx += dx;
-            }
-            return diag;
         }
 
 
