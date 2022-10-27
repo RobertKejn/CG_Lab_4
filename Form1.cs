@@ -1,37 +1,79 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Drawing;
 using System.Windows.Forms;
 
 namespace CG_4
 {
     public partial class Form1 : Form
     {
-        PictureBox field = new PictureBox();
+        PictureBox initialPicture = new PictureBox();
+        PictureBox grayPicture = new PictureBox();
+        PictureBox thresPicture = new PictureBox();
         public Form1()
         {
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.Text = "Paint";
-            this.Size = new Size(600, 400);
+            this.Size = new Size(Properties.Resources.picture_hand_compressed.Width*3+20, Properties.Resources.picture_hand_compressed.Height);
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.Show();
 
-            field.Size = new Size(600, 400);
-            field.Image = new Bitmap(field.Width, field.Height);
-            field.Location = new Point(0, 0);
-            field.Visible = true;
-            this.Controls.Add(field);
-            //field.MouseClick += FieldClick;
+            initialPicture.Size = Properties.Resources.picture_hand_compressed.Size;
+            initialPicture.Image = Properties.Resources.picture_hand_compressed;
+            initialPicture.Location = new Point(0, 0);
+            initialPicture.Visible = true;
+            this.Controls.Add(initialPicture);
+            initialPicture.MouseClick += initialPictureClick;
+
+            grayPicture.Size = initialPicture.Size;
+            grayPicture.Location = new Point(initialPicture.Width + 10, 0);
+            grayPicture.Visible = true;
+            this.Controls.Add(grayPicture);
+            grayPicture.MouseClick += imageThresholding;
+
+            thresPicture.Size = initialPicture.Size;
+            thresPicture.Location = new Point((initialPicture.Width + 10)*2, 0);
+            thresPicture.Visible = true;
+            this.Controls.Add(thresPicture);
         }
+
+        private void initialPictureClick(object sender, MouseEventArgs args)
+        {
+            Bitmap bm = (Bitmap)((sender as PictureBox).Image);
+            Bitmap nbm = new Bitmap(bm.Width, bm.Height);
+            for(int i = 0; i < bm.Width; i++)
+            {
+                for(int j = 0; j < bm.Height; j++)
+                {
+                    Color c = bm.GetPixel(i, j);
+                    byte br = (byte)(c.R * 0.3 + c.G * 0.59 + c.B * 0.11);
+                    nbm.SetPixel(i, j, Color.FromArgb(255, br, br, br));
+                }
+            }
+            grayPicture.Image = nbm;
+        }
+
+        private void imageThresholding(object sender, MouseEventArgs args)
+        {
+            byte lim = 150;
+            if( (sender as PictureBox).Image != null){
+                Bitmap bm = (Bitmap)((sender as PictureBox).Image);
+                Bitmap nbm = new Bitmap(bm.Width, bm.Height);
+                for(int i = 0; i < bm.Width; i++)
+                {
+                    for(int j = 0; j < bm.Height; j++)
+                    {
+                        Color c = bm.GetPixel(i, j);
+                        byte br = (byte)(c.R * 0.3 + c.G * 0.59 + c.B * 0.11);
+                        if (br > lim) nbm.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
+                        else nbm.SetPixel(i, j, Color.FromArgb(255, 0, 0, 0));
+                    }
+                }
+                thresPicture.Image = nbm;
+            }
+        }
+        
 
         /*private void FieldClick(object sender, MouseEventArgs args)
         {
