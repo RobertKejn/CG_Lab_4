@@ -1,0 +1,9 @@
+C:\Users\User\source\repos\CG_4\bin\Debug\CG_4.exe.config
+C:\Users\User\source\repos\CG_4\bin\Debug\CG_4.exe
+C:\Users\User\source\repos\CG_4\bin\Debug\CG_4.pdb
+C:\Users\User\source\repos\CG_4\obj\Debug\CG_4.csprojAssemblyReference.cache
+C:\Users\User\source\repos\CG_4\obj\Debug\CG_4.Properties.Resources.resources
+C:\Users\User\source\repos\CG_4\obj\Debug\CG_4.csproj.GenerateResource.cache
+C:\Users\User\source\repos\CG_4\obj\Debug\CG_4.csproj.CoreCompileInputs.cache
+C:\Users\User\source\repos\CG_4\obj\Debug\CG_4.exe
+C:\Users\User\source\repos\CG_4\obj\Debug\CG_4.pdb
