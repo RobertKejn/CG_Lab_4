@@ -30,10 +30,10 @@ namespace CG_4
             field.Location = new Point(0, 0);
             field.Visible = true;
             this.Controls.Add(field);
-            field.MouseClick += FieldClick;
+            //field.MouseClick += FieldClick;
         }
 
-        private void FieldClick(object sender, MouseEventArgs args)
+        /*private void FieldClick(object sender, MouseEventArgs args)
         {
 
             (sender as PictureBox).Image = Draw((sender as PictureBox).Image.Size);
@@ -85,5 +85,6 @@ namespace CG_4
             }
             return bm;
         }
+        */
     }
 }
