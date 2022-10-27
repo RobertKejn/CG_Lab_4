@@ -13,7 +13,7 @@ namespace CG_4
         PictureBox diagPicture = new PictureBox();
         public Form1()
         {
-            Bitmap im = Properties.Resources.putin_compressed;
+            Bitmap im = Properties.Resources.picture_hand_compressed;
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -52,8 +52,6 @@ namespace CG_4
             maskPicture.Location = new Point((initialPicture.Width + 10) * 3, 0);
             maskPicture.Visible = true;
             this.Controls.Add(maskPicture);
-
-            
         }
 
         private void MaskFiltration(object sender, MouseEventArgs args)
@@ -131,11 +129,23 @@ namespace CG_4
         }
         private void imageThresholding(object sender, MouseEventArgs args)
         {
-            var diag = GiagramCreation(3);
-            DrawDiag(diag);
+            
             if ((sender as PictureBox).Image != null)
             {
                 Bitmap bm = (Bitmap)((sender as PictureBox).Image);
+                byte min = bm.GetPixel(0, 0).R;
+                byte max = min;
+                for(int x = 0; x < bm.Width; x++)
+                {
+                    for(int y = 0; y < bm.Height; y++)
+                    {
+                        byte c = bm.GetPixel(x, y).R;
+                        if (max < c) max = c;
+                        else if (min > c) min = c;
+                    }
+                }
+                byte[] diag = DiagramCreation(3, (byte)(max), min);
+
                 Bitmap nbm = new Bitmap(bm.Width, bm.Height);
                 for (int i = 0; i < bm.Width; i++)
                 {
@@ -143,7 +153,7 @@ namespace CG_4
                     {
                         Color c = bm.GetPixel(i, j);
                         byte br = (byte)((c.R + c.G + c.B) / 3);
-                        if (br > diag[br]) nbm.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
+                        if (br > diag[br-min]) nbm.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
                         else nbm.SetPixel(i, j, Color.FromArgb(255, 0, 0, 0));
                     }
                 }
@@ -151,11 +161,10 @@ namespace CG_4
             }
         }
 
-        private byte[] GiagramCreation(int n)
-        {
-            byte[] diag = new byte[256];
-            int dx = 256 / n;
-            //int dy = n;
+         public byte[] DiagramCreation(int n, byte max, byte min)
+         {
+            byte[] diag = new byte[(max-min+1)];
+            int dx = (max-min) / n;
             int cx = 0;
             for (int i = 0; i < n; i++)
             {
