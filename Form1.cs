@@ -8,6 +8,10 @@ namespace CG_4
     public partial class Form1 : Form
     {
         private int nCount = 2;
+        private bool magicFlag = false;
+
+        private int dMin = 100;
+        private int dMax = 150;
 
         private Button Clear;
         private Button ToGrey;
@@ -16,6 +20,8 @@ namespace CG_4
 
         private Button pCount;
         private Button mCount;
+
+        private Button Magic;
 
         private Bitmap initialPicture;
 
@@ -69,7 +75,8 @@ namespace CG_4
             nCount = 2;
             double maxWidth = 256.0;
             if (initialPicture.Width > (int)maxWidth) initialPicture = new Bitmap(initialPicture, new Size((int)maxWidth, (int)(maxWidth / initialPicture.Width * initialPicture.Height)));
-            this.Size = new Size(initialPicture.Width * 5, initialPicture.Height + 100+50+25);
+            if(initialPicture.Height > 256) this.Size = new Size(initialPicture.Width * 5, initialPicture.Height + 100+50+25);
+            else this.Size = new Size(initialPicture.Width * 5, 256-initialPicture.Height/3 + 100 + 50 + 25);
             this.Location = new Point((1920 - this.Width) / 2, (1080 - this.Height) / 2);
 
             InitialPicture.Size = initialPicture.Size;
@@ -88,7 +95,8 @@ namespace CG_4
             this.Controls.Add(ThresPicture);
 
             DiagramPicture.Size = new Size(256, 256);
-            DiagramPicture.Location = new Point(InitialPicture.Width * 3, initialPicture.Height - 256);
+            if(initialPicture.Height < 256) DiagramPicture.Location = new Point(InitialPicture.Width * 3, 0);
+            else DiagramPicture.Location = new Point(InitialPicture.Width * 3, initialPicture.Height-255);
             DiagramPicture.Image = null;
             this.Controls.Add(DiagramPicture);
             DrawDiagram(nCount);
@@ -133,13 +141,99 @@ namespace CG_4
             this.Controls.Add(mCount);
             mCount.Click += nMinus;
 
-            ToMask = new Button();
+            Magic = new Button();
+            Magic.Text = "Magic";
+            Magic.Size = new Size(56, 25);
+            Magic.Location = new Point(InitialPicture.Width * 2 + InitialPicture.Width / 2 - Magic.Width / 2, initialPicture.Height + 25 + ToThresh.Height + 15);
+            this.Controls.Add(Magic);
+            Magic.Click += AlternativeDiagram;
 
+            ToMask = new Button();
             ToMask.Size = new Size(200, 50);
             ToMask.Text = "Картинка после Масочной Фильтрации";
             ToMask.Location = new Point(InitialPicture.Width*4 + InitialPicture.Width / 2 - ToMask.Width / 2, initialPicture.Height + 25);
             this.Controls.Add(ToMask);
             ToMask.Click += MaskFiltrationCreation;
+        }
+
+        private void AltDiagChangeRange(object sender, MouseEventArgs args)
+        {
+            if (args.Y > 255 / 2 && args.X < dMax) dMin = args.X;
+            else if (args.Y <= 255 / 2 && args.X > dMin) dMax = args.X;
+            DrawAltDiagram();
+        }
+
+        private void DrawAltDiagram()
+        {
+            byte[] diag = new byte[256];
+            for (int i = 0; i < diag.Length; i++)
+            {
+                if (i >= dMin && i <= dMax) diag[i] = 255;
+                else diag[i] = 0;
+            }
+            Bitmap bm = new Bitmap(256, 256);
+            for (int i = 0; i < 256; i++)
+            {
+                bm.SetPixel(i, 255 - diag[i], Color.FromArgb(255, 0, 0, 0));
+                if (i < 255 && Math.Abs(diag[i] - diag[i + 1]) == 255)
+                {
+                    for (int j = 0; j < 256; j++)
+                    {
+                        bm.SetPixel(i, j, Color.FromArgb(255, 0, 0, 0));
+                    }
+                }
+            }
+            DiagramPicture.Image = bm;
+            AlternativeThresholding(diag);
+        }
+        private void AlternativeDiagram(object sender, EventArgs args)
+        {
+            magicFlag = !magicFlag;
+            if (magicFlag && GreyPicture.Image != null)
+            {
+                DiagramPicture.MouseClick += AltDiagChangeRange;
+                byte[] diag = new byte[256];
+                for(int i = 0; i < diag.Length; i++)
+                {
+                    if (i >= dMin && i <= dMax) diag[i] = 255;
+                    else diag[i] = 0;
+                }
+                Bitmap bm = new Bitmap(256, 256);
+                for(int i = 0; i < 256; i++)
+                {
+                    bm.SetPixel(i, 255-diag[i], Color.FromArgb(255, 0, 0, 0));
+                    if(i<255 && Math.Abs(diag[i]-diag[i+1]) == 255)
+                    {
+                        for(int j = 0; j < 256; j++)
+                        {
+                            bm.SetPixel(i, j, Color.FromArgb(255, 0, 0, 0));
+                        }
+                    }
+                }
+                DiagramPicture.Image = bm;
+                AlternativeThresholding(diag);
+            }
+            else 
+            {
+                DiagramPicture.MouseClick -= AltDiagChangeRange;
+                DrawDiagram(nCount);
+                GreyPictureCreation(null, null);
+                ThresholdingPictureCreation(null, null);
+            }
+        }
+
+        private void AlternativeThresholding(byte[] diag)
+        {
+            Bitmap bm = new Bitmap(GreyPicture.Image);
+            for(int i = 0; i < bm.Width; i++)
+            {
+                for(int j = 0; j < bm.Height; j++)
+                {
+                    Color c = bm.GetPixel(i, j);
+                    bm.SetPixel(i, j, Color.FromArgb(255, diag[c.R], diag[c.R], diag[c.R]));
+                }
+            }
+            ThresPicture.Image = bm;
         }
 
         private void nPlus(object sender, EventArgs args)
@@ -235,33 +329,36 @@ namespace CG_4
         }
         private void ThresholdingPictureCreation(object sender, EventArgs args)
         {
-            Bitmap bm = (Bitmap)GreyPicture.Image;
-            if (bm != null)
+            if (!magicFlag)
             {
-                byte min = bm.GetPixel(0, 0).R;
-                byte max = min;
-                for (int x = 0; x < bm.Width; x++)
+                Bitmap bm = (Bitmap)GreyPicture.Image;
+                if (bm != null)
                 {
-                    for (int y = 0; y < bm.Height; y++)
+                    byte min = bm.GetPixel(0, 0).R;
+                    byte max = min;
+                    for (int x = 0; x < bm.Width; x++)
                     {
-                        byte c = bm.GetPixel(x, y).R;
-                        if (max < c) max = c;
-                        else if (min > c) min = c;
+                        for (int y = 0; y < bm.Height; y++)
+                        {
+                            byte c = bm.GetPixel(x, y).R;
+                            if (max < c) max = c;
+                            else if (min > c) min = c;
+                        }
                     }
-                }
-                byte[] diag = DiagramCreation(nCount, max, min);
+                    byte[] diag = DiagramCreation(nCount, max, min);
 
-                Bitmap nbm = new Bitmap(bm.Width, bm.Height);
-                for (int i = 0; i < bm.Width; i++)
-                {
-                    for (int j = 0; j < bm.Height; j++)
+                    Bitmap nbm = new Bitmap(bm.Width, bm.Height);
+                    for (int i = 0; i < bm.Width; i++)
                     {
-                        Color c = bm.GetPixel(i, j);
-                        byte br = (byte)(c.R);
-                        nbm.SetPixel(i, j, Color.FromArgb(255, diag[br-min], diag[br - min], diag[br - min]));
+                        for (int j = 0; j < bm.Height; j++)
+                        {
+                            Color c = bm.GetPixel(i, j);
+                            byte br = (byte)(c.R);
+                            nbm.SetPixel(i, j, Color.FromArgb(255, diag[br - min], diag[br - min], diag[br - min]));
+                        }
                     }
+                    ThresPicture.Image = nbm;
                 }
-                ThresPicture.Image = nbm;
             }
         }
 
