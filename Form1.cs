@@ -73,6 +73,7 @@ namespace CG_4
         private void InitializeComponents()
         {
             nCount = 2;
+            magicFlag = false;
             double maxWidth = 256.0;
             if (initialPicture.Width > (int)maxWidth) initialPicture = new Bitmap(initialPicture, new Size((int)maxWidth, (int)(maxWidth / initialPicture.Width * initialPicture.Height)));
             if(initialPicture.Height > 256) this.Size = new Size(initialPicture.Width * 5, initialPicture.Height + 100+50+25);
@@ -224,16 +225,19 @@ namespace CG_4
 
         private void AlternativeThresholding(byte[] diag)
         {
-            Bitmap bm = new Bitmap(GreyPicture.Image);
-            for(int i = 0; i < bm.Width; i++)
+            if (GreyPicture.Image != null)
             {
-                for(int j = 0; j < bm.Height; j++)
+                Bitmap bm = new Bitmap(GreyPicture.Image);
+                for (int i = 0; i < bm.Width; i++)
                 {
-                    Color c = bm.GetPixel(i, j);
-                    bm.SetPixel(i, j, Color.FromArgb(255, diag[c.R], diag[c.R], diag[c.R]));
+                    for (int j = 0; j < bm.Height; j++)
+                    {
+                        Color c = bm.GetPixel(i, j);
+                        bm.SetPixel(i, j, Color.FromArgb(255, diag[c.R], diag[c.R], diag[c.R]));
+                    }
                 }
+                ThresPicture.Image = bm;
             }
-            ThresPicture.Image = bm;
         }
 
         private void nPlus(object sender, EventArgs args)
