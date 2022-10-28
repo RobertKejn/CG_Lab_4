@@ -207,8 +207,8 @@ namespace CG_4
         public byte[] DiagramCreation(int n, byte max, byte min)
         {
             byte[] diag = new byte[(max - min + 1)];
-            int dx = (max - min) / n;
-            int dy = 255 / dx;
+            double dx = (max - min) / n;
+            double dy = 255 / dx;
             int cx = 0;
             for (int i = 0; i < n; i++)
             {
@@ -216,7 +216,13 @@ namespace CG_4
                 {
                     diag[j] = (byte)((j - cx) * dy);
                 }
-                cx += dx;
+                cx = (int)(cx + dx);
+            }
+            int k = diag.Length - 1;
+            while(diag[k] == 0)
+            {
+                diag[k] = 255;
+                k--;
             }
             return diag;
         }
@@ -244,13 +250,11 @@ namespace CG_4
                     for (int j = 0; j < bm.Height; j++)
                     {
                         Color c = bm.GetPixel(i, j);
-                        byte br = (byte)((c.R + c.G + c.B) / 3);
-                        if (br > diag[br - min]) nbm.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
-                        else nbm.SetPixel(i, j, Color.FromArgb(255, 0, 0, 0));
+                        byte br = (byte)(c.R);
+                        nbm.SetPixel(i, j, Color.FromArgb(255, diag[br-min], diag[br - min], diag[br - min]));
                     }
                 }
                 ThresPicture.Image = nbm;
-                MaskPicture.Image = null;
             }
         }
 
