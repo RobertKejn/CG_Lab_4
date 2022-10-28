@@ -1,77 +1,167 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace CG_4
 {
     public partial class Form1 : Form
     {
-        PictureBox initialPicture = new PictureBox();
-        PictureBox grayPicture = new PictureBox();
-        PictureBox thresPicture = new PictureBox();
-        PictureBox maskPicture = new PictureBox();
-        PictureBox diagPicture = new PictureBox();
+        private int nCount = 2;
+
+        private Button Clear;
+        private Button ToGrey;
+        private Button ToThresh;
+        private Button ToMask;
+
+        private Button pCount;
+        private Button mCount;
+
+        private Bitmap initialPicture;
+
+        private PictureBox InitialPicture = new PictureBox();
+        private PictureBox GreyPicture = new PictureBox();
+        private PictureBox ThresPicture = new PictureBox();
+        private PictureBox MaskPicture = new PictureBox();
         public Form1()
         {
-            Bitmap im = Properties.Resources.photo_2;
+            Image im = Properties.Resources.no_signal;
+            this.Text = "CG_4 V - 8";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.Size = new Size(im.Width * 4 + 30, im.Height + 10 + 256);
-            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.Size = new Size(im.Width, im.Height + 50);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.Show();
 
-            initialPicture.Size = im.Size;
-            initialPicture.Image = im;
-            initialPicture.Location = new Point(0, 0);
-            initialPicture.Visible = true;
-            this.Controls.Add(initialPicture);
-            initialPicture.MouseClick += initialPictureClick;
-
-            grayPicture.Size = initialPicture.Size;
-            grayPicture.Location = new Point(initialPicture.Width + 10, 0);
-            grayPicture.Visible = true;
-            this.Controls.Add(grayPicture);
-            grayPicture.MouseClick += imageThresholding;
-
-            thresPicture.Size = initialPicture.Size;
-            thresPicture.Location = new Point((initialPicture.Width + 10) * 2, 0);
-            thresPicture.Visible = true;
-            this.Controls.Add(thresPicture);
-            thresPicture.MouseClick += MaskFiltration;
-
-            diagPicture.Size = new Size(256, 256);
-            diagPicture.Image = new Bitmap(256, 256);
-            diagPicture.Location = new Point(0, (initialPicture.Height + 10));
-            diagPicture.Visible = true;
-            this.Controls.Add(diagPicture);
-
-            maskPicture.Size = initialPicture.Size;
-            maskPicture.Location = new Point((initialPicture.Width + 10) * 3, 0);
-            maskPicture.Visible = true;
-            this.Controls.Add(maskPicture);
+            InitialPicture.Size = im.Size;
+            InitialPicture.Image = im;
+            InitialPicture.Location = new Point(0, 0);
+            this.Controls.Add(InitialPicture);
+            InitialPicture.MouseClick += gettingInitialPicture;
         }
 
-        private void MaskFiltration(object sender, MouseEventArgs args)
+        private void gettingInitialPicture(object sender, EventArgs args)
         {
-            if ((sender as PictureBox).Image != null)
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                Bitmap bm = (Bitmap)((sender as PictureBox).Image);
+                openFileDialog.InitialDirectory = "c:\\Users\\User\\Downloads\\";
+                openFileDialog.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+                openFileDialog.FilterIndex = 2;
+                openFileDialog.RestoreDirectory = true;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    var filePath = openFileDialog.FileName;
+                    var im = (Bitmap)(Image.FromFile(filePath));
+                    if (im != null)
+                    {
+                        initialPicture = im;
+                        this.Controls.Clear();
+                        InitializeComponents();
+                    }
+                }
+            }
+        }
+        private void InitializeComponents()
+        {
+            nCount = 2;
+            double maxWidth = 400.0;
+            if (initialPicture.Width > (int)maxWidth) initialPicture = new Bitmap(initialPicture, new Size((int)maxWidth, (int)(maxWidth / initialPicture.Width * initialPicture.Height)));
+            this.Size = new Size(initialPicture.Width * 4, initialPicture.Height + 100+50+25);
+            this.Location = new Point((1920 - this.Width) / 2, (1080 - this.Height) / 2);
+
+            InitialPicture.Size = initialPicture.Size;
+            InitialPicture.Image = initialPicture;
+            this.Controls.Add(InitialPicture);
+            InitialPicture.MouseClick -= gettingInitialPicture;
+            //InitialPicture.MouseClick += GreyPictureCreation;
+
+            GreyPicture.Size = initialPicture.Size;
+            GreyPicture.Location = new Point(initialPicture.Width, 0);
+            GreyPicture.Image = null;
+            this.Controls.Add(GreyPicture);
+            //GreyPicture.MouseClick += ThresholdingPictureCreation;
+
+            ThresPicture.Size = initialPicture.Size;
+            ThresPicture.Location = new Point(initialPicture.Width * 2, 0);
+            ThresPicture.Image = null;
+            this.Controls.Add(ThresPicture);
+            //ThresPicture.MouseClick += MaskFiltrationCreation;
+
+            MaskPicture.Size = initialPicture.Size;
+            MaskPicture.Location = new Point(initialPicture.Width * 3, 0);
+            MaskPicture.Image = null;
+            this.Controls.Add(MaskPicture);
+
+            Clear = new Button();
+            Clear.Text = "Исходная картинка";
+            Clear.Size = new Size(200, 50);
+            Clear.Location = new Point(InitialPicture.Width / 2 - Clear.Width / 2, initialPicture.Height + 25 );
+            this.Controls.Add(Clear);
+            Clear.Click += gettingInitialPicture;
+
+            ToGrey = new Button();
+            ToGrey.Text = "Картинка в оттенках серого";
+            ToGrey.Size = new Size(200, 50);
+            ToGrey.Location = new Point(InitialPicture.Width + InitialPicture.Width / 2 - ToGrey.Width / 2, initialPicture.Height + 25);
+            this.Controls.Add(ToGrey);
+            ToGrey.Click += GreyPictureCreation;
+
+            ToThresh = new Button();
+            ToThresh.Text = "Картинка после Пороговой Обработки ("+ nCount.ToString() + ")";
+            ToThresh.Size = new Size(200, 50);
+            ToThresh.Location = new Point(InitialPicture.Width*2 + InitialPicture.Width / 2 - ToThresh.Width / 2, initialPicture.Height + 25);
+            this.Controls.Add(ToThresh);
+            ToThresh.Click += ThresholdingPictureCreation;
+
+            pCount = new Button();
+            pCount.Text = "+";
+            pCount.Size = new Size(50, 25);
+            pCount.Location = new Point(InitialPicture.Width * 2 + InitialPicture.Width / 2 + pCount.Width, initialPicture.Height + 25 + ToThresh.Height + 15);
+            this.Controls.Add(pCount);
+            pCount.Click += nPlus;
+
+            mCount = new Button();
+            mCount.Text = "-";
+            mCount.Size = new Size(50, 25);
+            mCount.Location = new Point(InitialPicture.Width * 2 + InitialPicture.Width / 2 - 2*mCount.Width, initialPicture.Height + 25 + ToThresh.Height + 15);
+            this.Controls.Add(mCount);
+            mCount.Click += nMinus;
+
+            ToMask = new Button();
+
+            ToMask.Size = new Size(200, 50);
+            ToMask.Text = "Картинка после Масочной Фильтрации";
+            ToMask.Location = new Point(InitialPicture.Width*3 + InitialPicture.Width / 2 - ToMask.Width / 2, initialPicture.Height + 25);
+            this.Controls.Add(ToMask);
+            ToMask.Click += MaskFiltrationCreation;
+        }
+
+        private void nPlus(object sender, EventArgs args)
+        {
+            if (nCount < 20) nCount++;
+            ToThresh.Text = "Картинка после Пороговой Обработки (" + nCount.ToString() + ")";
+        }
+
+        private void nMinus(object sender, EventArgs args)
+        {
+            if (nCount > 1) nCount--;
+            ToThresh.Text = "Картинка после Пороговой Обработки (" + nCount.ToString() + ")";
+        }
+
+        private void MaskFiltrationCreation(object sender, EventArgs args)
+        {
+            Bitmap bm = (Bitmap)ThresPicture.Image;
+            if (bm != null)
+            {
                 Bitmap nbm = new Bitmap(bm.Width, bm.Height);
                 int a = 0;
-                int b = -1;
+                int b = 1;
                 int[,] m = new int[,]
                 {
               { 0, -1, 0 },
               { -1, 4, -1 },
               { 0, -1, 0 }
-              //{ 0, 0, -1, 0, 0},
-              //{ 0, -1, -1, -1, 0},
-              //{ -1, -1, 8, -1, -1},
-              //{ 0, -1, -1, -1, 0},
-              //{ 0, 0, -1, 0,0}
                 };
                 int n = m.GetLength(0);
                 int t = (n - 1) / 2;
@@ -79,7 +169,7 @@ namespace CG_4
                 {
                     for (int y = t; y < bm.Height - t; y++)
                     {
-                        
+
                         byte col = (byte)a;
                         for (int i = -t; i <= t; i++)
                         {
@@ -88,30 +178,83 @@ namespace CG_4
                                 col += (byte)(b * m[i + t, j + t] * bm.GetPixel(x + i, y + j).R);
                             }
                         }
-                        nbm.SetPixel(x, y, Color.FromArgb(255, col,col,col));
+                        nbm.SetPixel(x, y, Color.FromArgb(255, col, col, col));
                     }
                 }
-                maskPicture.Image = nbm;
+                MaskPicture.Image = nbm;
             }
         }
 
-        private void initialPictureClick(object sender, MouseEventArgs args)
+        private void GreyPictureCreation(object sender, EventArgs args)
         {
-            Bitmap bm = (Bitmap)((sender as PictureBox).Image);
-            Bitmap nbm = new Bitmap(bm.Width, bm.Height);
-            for (int i = 0; i < bm.Width; i++)
+            Bitmap bm = (Bitmap)InitialPicture.Image;
+            if (bm != null)
             {
-                for (int j = 0; j < bm.Height; j++)
+                Bitmap nbm = new Bitmap(bm.Width, bm.Height);
+                for (int i = 0; i < bm.Width; i++)
                 {
-                    Color c = bm.GetPixel(i, j);
-                    byte br = (byte)(c.R * 0.3 + c.G * 0.59 + c.B * 0.11);
-                    nbm.SetPixel(i, j, Color.FromArgb(255, br, br, br));
+                    for (int j = 0; j < bm.Height; j++)
+                    {
+                        Color c = bm.GetPixel(i, j);
+                        byte br = (byte)(c.R * 0.3 + c.G * 0.59 + c.B * 0.11);
+                        nbm.SetPixel(i, j, Color.FromArgb(255, br, br, br));
+                    }
                 }
+                GreyPicture.Image = nbm;
             }
-            grayPicture.Image = nbm;
         }
 
-        private void DrawDiag(byte[] diag)
+        public byte[] DiagramCreation(int n, byte max, byte min)
+        {
+            byte[] diag = new byte[(max - min + 1)];
+            int dx = (max - min) / n;
+            int dy = 255 / dx;
+            int cx = 0;
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = cx; j < ((i + 1) * dx); j++)
+                {
+                    diag[j] = (byte)((j - cx) * dy);
+                }
+                cx += dx;
+            }
+            return diag;
+        }
+        private void ThresholdingPictureCreation(object sender, EventArgs args)
+        {
+            Bitmap bm = (Bitmap)GreyPicture.Image;
+            if (bm != null)
+            {
+                byte min = bm.GetPixel(0, 0).R;
+                byte max = min;
+                for (int x = 0; x < bm.Width; x++)
+                {
+                    for (int y = 0; y < bm.Height; y++)
+                    {
+                        byte c = bm.GetPixel(x, y).R;
+                        if (max < c) max = c;
+                        else if (min > c) min = c;
+                    }
+                }
+                byte[] diag = DiagramCreation(nCount, max, min);
+
+                Bitmap nbm = new Bitmap(bm.Width, bm.Height);
+                for (int i = 0; i < bm.Width; i++)
+                {
+                    for (int j = 0; j < bm.Height; j++)
+                    {
+                        Color c = bm.GetPixel(i, j);
+                        byte br = (byte)((c.R + c.G + c.B) / 3);
+                        if (br > diag[br - min]) nbm.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
+                        else nbm.SetPixel(i, j, Color.FromArgb(255, 0, 0, 0));
+                    }
+                }
+                ThresPicture.Image = nbm;
+                MaskPicture.Image = null;
+            }
+        }
+
+        /*private void DrawDiag(byte[] diag)
         {
             Bitmap bm = new Bitmap(diag.Length, diag.Length);
             for (int i = 0; i < bm.Width; i++)
@@ -125,60 +268,10 @@ namespace CG_4
             {
                 bm.SetPixel(i, 255 - diag[i], Color.FromArgb(255, 0, 0, 0));
             }
-            diagPicture.Image = bm;
+            //diagPicture.Image = bm;
         }
 
-        public byte[] DiagramCreation(int n, byte max, byte min)
-        {
-            byte[] diag = new byte[(max - min + 1)];
-            int dx = (max - min) / n;
-            int dy = 255 / dx;
-            int cx = 0;
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = cx; j < ((i + 1) * dx); j++)
-                {
-                    diag[j] = (byte)((j-cx) * dy);
-                }
-                cx += dx;
-            }
-            return diag;
-        }
-        private void imageThresholding(object sender, MouseEventArgs args)
-        { 
-            if ((sender as PictureBox).Image != null)
-            {
-                Bitmap bm = (Bitmap)((sender as PictureBox).Image);
-                byte min = bm.GetPixel(0, 0).R;
-                byte max = min;
-                for(int x = 0; x < bm.Width; x++)
-                {
-                    for(int y = 0; y < bm.Height; y++)
-                    {
-                        byte c = bm.GetPixel(x, y).R;
-                        if (max < c) max = c;
-                        else if (min > c) min = c;
-                    }
-                }
-                byte[] diag = DiagramCreation(3, max, min);
-
-                Bitmap nbm = new Bitmap(bm.Width, bm.Height);
-                for (int i = 0; i < bm.Width; i++)
-                {
-                    for (int j = 0; j < bm.Height; j++)
-                    {
-                        Color c = bm.GetPixel(i, j);
-                        byte br = (byte)((c.R + c.G + c.B) / 3);
-                        if (br > diag[br-min]) nbm.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
-                        else nbm.SetPixel(i, j, Color.FromArgb(255, 0, 0, 0));
-                    }
-                }
-                thresPicture.Image = nbm;
-            }
-        }
-
-
-        /*private void FieldClick(object sender, MouseEventArgs args)
+        private void FieldClick(object sender, MouseEventArgs args)
         {
 
             (sender as PictureBox).Image = Draw((sender as PictureBox).Image.Size);
