@@ -76,8 +76,8 @@ namespace CG_4
             magicFlag = false;
             double maxWidth = 256.0;
             if (initialPicture.Width > (int)maxWidth) initialPicture = new Bitmap(initialPicture, new Size((int)maxWidth, (int)(maxWidth / initialPicture.Width * initialPicture.Height)));
-            if(initialPicture.Height > 256) this.Size = new Size(initialPicture.Width * 5, initialPicture.Height + 100+50+25);
-            else this.Size = new Size(initialPicture.Width * 5, 256-initialPicture.Height/3 + 100 + 50 + 25);
+            if(initialPicture.Height > 256) this.Size = new Size(initialPicture.Width * 5+20, initialPicture.Height + 100+50+25);
+            else this.Size = new Size(initialPicture.Width * 5+20, 256 + 100 + 50 + 25);
             this.Location = new Point((1920 - this.Width) / 2, (1080 - this.Height) / 2);
 
             InitialPicture.Size = initialPicture.Size;
