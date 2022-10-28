@@ -23,6 +23,8 @@ namespace CG_4
         private PictureBox GreyPicture = new PictureBox();
         private PictureBox ThresPicture = new PictureBox();
         private PictureBox MaskPicture = new PictureBox();
+
+        private PictureBox DiagramPicture = new PictureBox();
         public Form1()
         {
             Image im = Properties.Resources.no_signal;
@@ -65,31 +67,34 @@ namespace CG_4
         private void InitializeComponents()
         {
             nCount = 2;
-            double maxWidth = 400.0;
+            double maxWidth = 256.0;
             if (initialPicture.Width > (int)maxWidth) initialPicture = new Bitmap(initialPicture, new Size((int)maxWidth, (int)(maxWidth / initialPicture.Width * initialPicture.Height)));
-            this.Size = new Size(initialPicture.Width * 4, initialPicture.Height + 100+50+25);
+            this.Size = new Size(initialPicture.Width * 5, initialPicture.Height + 100+50+25);
             this.Location = new Point((1920 - this.Width) / 2, (1080 - this.Height) / 2);
 
             InitialPicture.Size = initialPicture.Size;
             InitialPicture.Image = initialPicture;
             this.Controls.Add(InitialPicture);
             InitialPicture.MouseClick -= gettingInitialPicture;
-            //InitialPicture.MouseClick += GreyPictureCreation;
 
             GreyPicture.Size = initialPicture.Size;
             GreyPicture.Location = new Point(initialPicture.Width, 0);
             GreyPicture.Image = null;
             this.Controls.Add(GreyPicture);
-            //GreyPicture.MouseClick += ThresholdingPictureCreation;
 
             ThresPicture.Size = initialPicture.Size;
             ThresPicture.Location = new Point(initialPicture.Width * 2, 0);
             ThresPicture.Image = null;
             this.Controls.Add(ThresPicture);
-            //ThresPicture.MouseClick += MaskFiltrationCreation;
+
+            DiagramPicture.Size = new Size(256, 256);
+            DiagramPicture.Location = new Point(InitialPicture.Width * 3, initialPicture.Height - 256);
+            DiagramPicture.Image = null;
+            this.Controls.Add(DiagramPicture);
+            DrawDiagram(nCount);
 
             MaskPicture.Size = initialPicture.Size;
-            MaskPicture.Location = new Point(initialPicture.Width * 3, 0);
+            MaskPicture.Location = new Point(initialPicture.Width * 4, 0);
             MaskPicture.Image = null;
             this.Controls.Add(MaskPicture);
 
@@ -132,21 +137,23 @@ namespace CG_4
 
             ToMask.Size = new Size(200, 50);
             ToMask.Text = "Картинка после Масочной Фильтрации";
-            ToMask.Location = new Point(InitialPicture.Width*3 + InitialPicture.Width / 2 - ToMask.Width / 2, initialPicture.Height + 25);
+            ToMask.Location = new Point(InitialPicture.Width*4 + InitialPicture.Width / 2 - ToMask.Width / 2, initialPicture.Height + 25);
             this.Controls.Add(ToMask);
             ToMask.Click += MaskFiltrationCreation;
         }
 
         private void nPlus(object sender, EventArgs args)
         {
-            if (nCount < 20) nCount++;
+            if (nCount < 255) nCount++;
             ToThresh.Text = "Картинка после Пороговой Обработки (" + nCount.ToString() + ")";
+            DrawDiagram(nCount);
         }
 
         private void nMinus(object sender, EventArgs args)
         {
             if (nCount > 1) nCount--;
             ToThresh.Text = "Картинка после Пороговой Обработки (" + nCount.ToString() + ")";
+            DrawDiagram(nCount);
         }
 
         private void MaskFiltrationCreation(object sender, EventArgs args)
@@ -258,9 +265,9 @@ namespace CG_4
             }
         }
 
-        /*private void DrawDiag(byte[] diag)
+        private void DrawDiagram(int n)
         {
-            Bitmap bm = new Bitmap(diag.Length, diag.Length);
+            Bitmap bm = new Bitmap(256,256);
             for (int i = 0; i < bm.Width; i++)
             {
                 for (int j = 0; j < bm.Height; j++)
@@ -268,13 +275,30 @@ namespace CG_4
                     bm.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
                 }
             }
-            for (int i = 0; i < diag.Length; i++)
+            double dx = 256 / n;
+            double dy = 256 / dx;
+            int cx = 0;
+            int cy = 0;
+            for(int i = 0; i < n; i++)
             {
-                bm.SetPixel(i, 255 - diag[i], Color.FromArgb(255, 0, 0, 0));
+                for(int j = cx; j < cx+(int)dx; j++)
+                {
+                    for(int k = cy; k < (int)(cy+dy); k++)
+                    {
+                        bm.SetPixel(j, 255-k, Color.FromArgb(255, 0, 0, 0));
+                    }
+                    cy = (int)(cy + dy);
+                }
+                cx = (int)(cx + dx);
+                cy = 0;
+                for(int j = 0; j < 256; j++)
+                {
+                    bm.SetPixel(cx-1, j, Color.FromArgb(255, 0, 0, 0));
+                }
             }
-            //diagPicture.Image = bm;
+            DiagramPicture.Image = bm;
         }
-
+        /*
         private void FieldClick(object sender, MouseEventArgs args)
         {
 
