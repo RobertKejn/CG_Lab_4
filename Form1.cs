@@ -157,6 +157,97 @@ namespace CG_4
             ToMask.Click += MaskFiltrationCreation;
         }
 
+        private void GreyPictureCreation(object sender, EventArgs args)
+        {
+            Bitmap bm = (Bitmap)InitialPicture.Image;
+            if (bm != null)
+            {
+                Bitmap nbm = new Bitmap(bm.Width, bm.Height);
+                for (int i = 0; i < bm.Width; i++)
+                {
+                    for (int j = 0; j < bm.Height; j++)
+                    {
+                        Color c = bm.GetPixel(i, j);
+                        byte br = (byte)(c.R * 0.3 + c.G * 0.59 + c.B * 0.11);
+                        nbm.SetPixel(i, j, Color.FromArgb(255, br, br, br));
+                    }
+                }
+                GreyPicture.Image = nbm;
+            }
+        }
+
+        private void ThresholdingPictureCreation(object sender, EventArgs args)
+        {
+            if (!magicFlag)
+            {
+                Bitmap bm = (Bitmap)GreyPicture.Image;
+                if (bm != null)
+                {
+                    byte min = bm.GetPixel(0, 0).R;
+                    byte max = min;
+                    for (int x = 0; x < bm.Width; x++)
+                    {
+                        for (int y = 0; y < bm.Height; y++)
+                        {
+                            byte c = bm.GetPixel(x, y).R;
+                            if (max < c) max = c;
+                            else if (min > c) min = c;
+                        }
+                    }
+                    byte[] diag = DiagramCreation(nCount, max, min);
+
+                    Bitmap nbm = new Bitmap(bm.Width, bm.Height);
+                    for (int i = 0; i < bm.Width; i++)
+                    {
+                        for (int j = 0; j < bm.Height; j++)
+                        {
+                            Color c = bm.GetPixel(i, j);
+                            byte br = (byte)(c.R);
+                            nbm.SetPixel(i, j, Color.FromArgb(255, diag[br - min], diag[br - min], diag[br - min]));
+                        }
+                    }
+                    ThresPicture.Image = nbm;
+                }
+            }
+        }
+        private void MaskFiltrationCreation(object sender, EventArgs args)
+        {
+            Bitmap bm;
+            if (!magicFlag) bm = (Bitmap)GreyPicture.Image;
+            else bm = (Bitmap)ThresPicture.Image;
+            if (bm != null)
+            {
+                Bitmap nbm = new Bitmap(bm.Width, bm.Height);
+                int a = 0;
+                int b = 1;
+                int[,] m = new int[,]
+                {
+              { 0, -1, 0 },
+              { -1, 4, -1 },
+              { 0, -1, 0 }
+                };
+                int n = m.GetLength(0);
+                int t = (n - 1) / 2;
+                for (int x = t; x < bm.Width - t; x++)
+                {
+                    for (int y = t; y < bm.Height - t; y++)
+                    {
+
+                        byte col = (byte)a;
+                        for (int i = -t; i <= t; i++)
+                        {
+                            for (int j = -t; j <= t; j++)
+                            {
+                                col += (byte)(b * m[i + t, j + t] * bm.GetPixel(x + i, y + j).R);
+                            }
+                        }
+                        nbm.SetPixel(x, y, Color.FromArgb(255, col, col, col));
+                    }
+                }
+                MaskPicture.Image = nbm;
+            }
+        }
+
         private void AltDiagChangeRange(object sender, MouseEventArgs args)
         {
             if (args.Y > 255 / 2 && args.X < dMax) dMin = args.X;
@@ -254,61 +345,6 @@ namespace CG_4
             DrawDiagram(nCount);
         }
 
-        private void MaskFiltrationCreation(object sender, EventArgs args)
-        {
-            Bitmap bm = (Bitmap)ThresPicture.Image;
-            if (bm != null)
-            {
-                Bitmap nbm = new Bitmap(bm.Width, bm.Height);
-                int a = 0;
-                int b = 1;
-                int[,] m = new int[,]
-                {
-              { 0, -1, 0 },
-              { -1, 4, -1 },
-              { 0, -1, 0 }
-                };
-                int n = m.GetLength(0);
-                int t = (n - 1) / 2;
-                for (int x = t; x < bm.Width - t; x++)
-                {
-                    for (int y = t; y < bm.Height - t; y++)
-                    {
-
-                        byte col = (byte)a;
-                        for (int i = -t; i <= t; i++)
-                        {
-                            for (int j = -t; j <= t; j++)
-                            {
-                                col += (byte)(b * m[i + t, j + t] * bm.GetPixel(x + i, y + j).R);
-                            }
-                        }
-                        nbm.SetPixel(x, y, Color.FromArgb(255, col, col, col));
-                    }
-                }
-                MaskPicture.Image = nbm;
-            }
-        }
-
-        private void GreyPictureCreation(object sender, EventArgs args)
-        {
-            Bitmap bm = (Bitmap)InitialPicture.Image;
-            if (bm != null)
-            {
-                Bitmap nbm = new Bitmap(bm.Width, bm.Height);
-                for (int i = 0; i < bm.Width; i++)
-                {
-                    for (int j = 0; j < bm.Height; j++)
-                    {
-                        Color c = bm.GetPixel(i, j);
-                        byte br = (byte)(c.R * 0.3 + c.G * 0.59 + c.B * 0.11);
-                        nbm.SetPixel(i, j, Color.FromArgb(255, br, br, br));
-                    }
-                }
-                GreyPicture.Image = nbm;
-            }
-        }
-
         public byte[] DiagramCreation(int n, byte max, byte min)
         {
             byte[] diag = new byte[(max - min + 1)];
@@ -330,40 +366,6 @@ namespace CG_4
                 k--;
             }
             return diag;
-        }
-        private void ThresholdingPictureCreation(object sender, EventArgs args)
-        {
-            if (!magicFlag)
-            {
-                Bitmap bm = (Bitmap)GreyPicture.Image;
-                if (bm != null)
-                {
-                    byte min = bm.GetPixel(0, 0).R;
-                    byte max = min;
-                    for (int x = 0; x < bm.Width; x++)
-                    {
-                        for (int y = 0; y < bm.Height; y++)
-                        {
-                            byte c = bm.GetPixel(x, y).R;
-                            if (max < c) max = c;
-                            else if (min > c) min = c;
-                        }
-                    }
-                    byte[] diag = DiagramCreation(nCount, max, min);
-
-                    Bitmap nbm = new Bitmap(bm.Width, bm.Height);
-                    for (int i = 0; i < bm.Width; i++)
-                    {
-                        for (int j = 0; j < bm.Height; j++)
-                        {
-                            Color c = bm.GetPixel(i, j);
-                            byte br = (byte)(c.R);
-                            nbm.SetPixel(i, j, Color.FromArgb(255, diag[br - min], diag[br - min], diag[br - min]));
-                        }
-                    }
-                    ThresPicture.Image = nbm;
-                }
-            }
         }
 
         private void DrawDiagram(int n)
