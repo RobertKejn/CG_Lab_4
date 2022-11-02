@@ -219,7 +219,7 @@ namespace CG_4
             {
                 Bitmap nbm = new Bitmap(bm.Width, bm.Height);
                 int a = 0;
-                int b = 1;
+                double b = 1;
                 int[,] m = new int[,]
                 {
               { 0, -1, 0 },
@@ -238,12 +238,26 @@ namespace CG_4
                         {
                             for (int j = -t; j <= t; j++)
                             {
-                                col += (byte)(b * m[i + t, j + t] * bm.GetPixel(x + i, y + j).R);
+                                col += (byte)((int)(b * m[i + t, j + t] * bm.GetPixel(x + i, y + j).R));
                             }
                         }
                         nbm.SetPixel(x, y, Color.FromArgb(255, col, col, col));
                     }
                 }
+                for(int i = 1; i < nbm.Height-1; i++)
+                {
+                    nbm.SetPixel(0, i, nbm.GetPixel(1, i));
+                    nbm.SetPixel(nbm.Width-1, i, nbm.GetPixel(nbm.Width-2, i));
+                }
+                for (int i = 1; i < nbm.Width - 1; i++)
+                {
+                    nbm.SetPixel(i, 0, nbm.GetPixel(i, 0));
+                    nbm.SetPixel(i, nbm.Height - 1, nbm.GetPixel(i, nbm.Height - 2));
+                }
+                nbm.SetPixel(0, 0, nbm.GetPixel(0, 1));
+                nbm.SetPixel(0, nbm.Height-1, nbm.GetPixel(0, nbm.Height-2));
+                nbm.SetPixel(nbm.Width-1, 0, nbm.GetPixel(nbm.Width - 2,0));
+                nbm.SetPixel(nbm.Width - 1, nbm.Height - 1, nbm.GetPixel(nbm.Width - 2, nbm.Height - 2));
                 MaskPicture.Image = nbm;
             }
         }
@@ -348,22 +362,9 @@ namespace CG_4
         public byte[] DiagramCreation(int n, byte max, byte min)
         {
             byte[] diag = new byte[(max - min + 1)];
-            double dx = (max - min) / n;
-            double dy = 255 / dx;
-            int cx = 0;
-            for (int i = 0; i < n; i++)
+            for(int i = 0; i < diag.Length; i++)
             {
-                for (int j = cx; j < ((i + 1) * dx); j++)
-                {
-                    diag[j] = (byte)((j - cx) * dy);
-                }
-                cx = (int)(cx + dx);
-            }
-            int k = diag.Length - 1;
-            while(diag[k] == 0)
-            {
-                diag[k] = 255;
-                k--;
+                diag[i] = (byte)(i * n % 256);
             }
             return diag;
         }
